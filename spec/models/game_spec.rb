@@ -73,6 +73,13 @@ RSpec.describe Game, type: :model do
       expect(game_w_questions.finished?).to be_truthy
       expect(user.balance).to eq prize
     end
+
+    it '.current_game_question - returns current_question' do
+      expect(game_w_questions.current_game_question) == (game_w_questions.current_game_question.level - 1)
+    end
+    it '.previous level - should contain previous level' do
+      expect(game_w_questions.previous_level).to eq game_w_questions.current_level - 1
+    end
   end
 
   context '.status' do
