@@ -77,6 +77,7 @@ RSpec.describe Game, type: :model do
     it '.current_game_question - returns current_question' do
       expect(game_w_questions.current_game_question) == (game_w_questions.current_game_question.level - 1)
     end
+
     it '.previous level - should contain previous level' do
       expect(game_w_questions.previous_level).to eq game_w_questions.current_level - 1
     end
@@ -108,4 +109,62 @@ RSpec.describe Game, type: :model do
       expect(game_w_questions.status).to eq(:money)
     end
   end
+
+  describe '#answer_current_question!' do
+    before { game_w_questions.answer_current_question!(answer_key) }
+
+    context 'if answer is correct' do
+      let!(:level) { rand(0..Game::FIREPROOF_LEVELS.last - 1)}
+      let!(:answer_key) { game_w_questions.current_game_question.correct_answer_key }
+
+      context 'question is last' do
+        let!(:last_level) { Game::FIREPROOF_LEVELS.last }
+        let!(:max_prize) { Game::PRIZES.last }
+
+        before do
+          game_w_questions.current_level = last_level
+          game_w_questions.prize = Game::PRIZES[-2]
+          game_w_questions.answer_current_question!(answer_key)
+        end
+
+        it 'assigns final prize' do
+          expect(game_w_questions.prize).to eq(max_prize)
+        end
+
+        it 'finishes game with status :won' do
+          expect(game_w_questions.finished?).to be true
+          expect(game_w_questions.status).to eq :won
+        end
+      end
+
+      context 'question is NOT last' do
+        before do
+          game_w_questions.current_level = level
+          game_w_questions.answer_current_question!(answer_key)
+        end
+
+        it 'moves to the next level' do
+          expect(game_w_questions.current_level).to eq(level+1)
+        end
+
+        it 'continues game' do
+          expect(game_w_questions.finished?).to be false
+          expect(game_w_questions.status).to eq :in_progress
+        end
+      end
+
+      context 'time over' do
+        before do
+          game_w_questions.created_at = 1.hour.ago
+          game_w_questions.time_out!
+        end
+
+        it 'finishes game with status :timeout' do
+          expect(game_w_questions.finished?).to be true
+          expect(game_w_questions.status).to eq :timeout
+        end
+      end
+    end
+  end
 end
+
