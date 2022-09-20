@@ -11,26 +11,46 @@ RSpec.describe GameQuestion, type: :model do
   let(:game_question) { FactoryGirl.create(:game_question, a: 2, b: 1, c: 4, d: 3) }
 
   # группа тестов на игровое состояние объекта вопроса
-  context 'game status' do
-    it 'correct .level & .text delegates' do
-      expect(game_question.text).to eq(game_question.question.text)
-      expect(game_question.level).to eq(game_question.question.level)
+  describe '#level' do
+    context 'when delegated' do
+      it 'returns correct value' do
+        expect(game_question.level).to eq(game_question.question.level)
+      end
     end
-    # тест на правильную генерацию хэша с вариантами
-    it 'correct .variants' do
-      expect(game_question.variants).to eq({'a' => game_question.question.answer2,
-                                            'b' => game_question.question.answer1,
-                                            'c' => game_question.question.answer4,
-                                            'd' => game_question.question.answer3})
-    end
+  end
 
-    it 'correct .answer_correct?' do
-      # именно под буквой b в тесте мы спрятали указатель на верный ответ
-      expect(game_question.answer_correct?('b')).to be_truthy
+  describe '#text' do
+    context 'when delegated' do
+      it 'returns correct value' do
+        expect(game_question.text).to eq(game_question.question.text)
+      end
     end
+  end
 
-    it '.correct_answer_key - returns correct answer key' do
-      expect(game_question.correct_answer_key).to eq('b')
+  describe '#variants' do
+    context 'when hash is generated' do
+      it 'is correct' do
+        expect(game_question.variants).to eq({'a' => game_question.question.answer2,
+                                              'b' => game_question.question.answer1,
+                                              'c' => game_question.question.answer4,
+                                              'd' => game_question.question.answer3})
+      end
+    end
+  end
+
+  describe '#answer_correct?' do
+    context 'when called with correct answer' do
+      it 'returns true' do
+        expect(game_question.answer_correct?('b')).to be true
+      end
+    end
+  end
+
+  describe '#correct_answer_key' do
+    context 'when called' do
+      it 'returns correct answer key' do
+        expect(game_question.correct_answer_key).to eq('b')
+      end
     end
   end
 
@@ -42,16 +62,82 @@ RSpec.describe GameQuestion, type: :model do
   # }
   #
 
-  context 'user helpers' do
-    it 'correct audience_help' do
-      expect(game_question.help_hash).not_to include(:audience_help)
+  describe '#help_hash' do
+    it 'returns Hash' do
+      expect(game_question.help_hash).to be_a Hash
+    end
+  end
 
-      game_question.add_audience_help
+  describe '#add_audience_help' do
+    context 'player uses audience_help hint' do
+      let(:ah) { game_question.help_hash[:audience_help] }
 
-      expect(game_question.help_hash).to include(:audience_help)
+      context 'before use' do
+        it 'has no hint in the hash' do
+          expect(game_question.help_hash).not_to include(:audience_help)
+        end
+      end
 
-      ah = game_question.help_hash[:audience_help]
-      expect(ah.keys).to contain_exactly('a', 'b', 'c', 'd')
+      context 'after use' do
+        before { game_question.add_audience_help }
+
+        it 'adds hint to help hash' do
+          expect(game_question.help_hash).to include(:audience_help)
+        end
+
+        it 'uses hint correctly' do
+          expect(ah.keys).to contain_exactly('a', 'b', 'c', 'd')
+        end
+      end
+    end
+  end
+
+  describe '#add_fifty_fifty' do
+    context 'player uses fifty_fifty hint' do
+      let(:ff) { game_question.help_hash[:fifty_fifty] }
+
+      context 'before use' do
+        it 'has no hint in the hash' do
+          expect(game_question.help_hash).not_to include(:fifty_fifty)
+        end
+      end
+
+      context 'after use' do
+        before { game_question.add_fifty_fifty }
+
+        it 'adds hint to help hash' do
+          expect(game_question.help_hash).to include(:fifty_fifty)
+        end
+
+        it 'uses hint correctly' do
+          expect(ff).to include('b')
+          expect(ff.size).to eq 2
+        end
+      end
+    end
+  end
+
+  describe '#add_friend_call' do
+    context 'when player uses friend_call hint' do
+      let(:fc) { game_question.help_hash[:friend_call] }
+
+      context 'before use' do
+        it 'has no hint in the hash' do
+          expect(game_question.help_hash).not_to include(:friend_call)
+        end
+      end
+
+      context 'after use' do
+        before { game_question.add_friend_call }
+
+        it 'adds hint to help hash' do
+          expect(game_question.help_hash).to include(:friend_call)
+        end
+
+        it 'uses hint correctly' do
+          expect(fc).to be_a String
+        end
+      end
     end
   end
 end
