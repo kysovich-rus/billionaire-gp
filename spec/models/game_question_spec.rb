@@ -12,18 +12,14 @@ RSpec.describe GameQuestion, type: :model do
 
   # группа тестов на игровое состояние объекта вопроса
   describe '#level' do
-    context 'when delegated' do
-      it 'returns correct value' do
-        expect(game_question.level).to eq(game_question.question.level)
-      end
+    it 'returns correct value' do
+      expect(game_question.level).to eq(game_question.question.level)
     end
   end
 
   describe '#text' do
-    context 'when delegated' do
-      it 'returns correct value' do
-        expect(game_question.text).to eq(game_question.question.text)
-      end
+    it 'returns correct value' do
+      expect(game_question.text).to eq(game_question.question.text)
     end
   end
 
@@ -47,10 +43,8 @@ RSpec.describe GameQuestion, type: :model do
   end
 
   describe '#correct_answer_key' do
-    context 'when called' do
-      it 'returns correct answer key' do
-        expect(game_question.correct_answer_key).to eq('b')
-      end
+    it 'returns correct answer key' do
+      expect(game_question.correct_answer_key).to eq('b')
     end
   end
 

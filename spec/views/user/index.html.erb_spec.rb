@@ -1,7 +1,5 @@
 require 'rails_helper'
 
-# Тест на шаблон users/index.html.erb
-
 RSpec.describe 'users/index', type: :view do
   # Перед каждым шагом мы пропишем в переменную @users пару пользователей
   # как бы имитируя действие контроллера, который эти данные будет брать из базы
