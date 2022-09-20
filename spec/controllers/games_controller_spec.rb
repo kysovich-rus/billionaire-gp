@@ -144,16 +144,40 @@ RSpec.describe GamesController, type: :controller do
     context 'when Logged In' do
       before do
         sign_in user
-        put :answer, id: game_w_questions.id, letter: game_w_questions.current_game_question.correct_answer_key
       end
-      it 'answers correct' do
-        game = assigns(:game)
+      context 'answers correct' do
+        before do
+          put :answer, id: game_w_questions.id, letter: game_w_questions.current_game_question.correct_answer_key
+        end
 
-        expect(game.finished?).to be false
-        expect(game.current_level).to be > 0
+        it 'continues the game' do
+          expect(game.finished?).to be false
+          expect(game.current_level).to be > 0
 
-        expect(response).to redirect_to(game_path(game))
-        expect(flash.empty?).to be_truthy # удачный ответ не заполняет flash
+          expect(response).to redirect_to(game_path(game))
+          expect(flash.empty?).to be true
+        end
+      end
+
+      context 'answers incorrect' do
+        let (:current_question) { game_w_questions.current_game_question }
+        let (:incorrect_answer_key) { (current_question.variants.keys - [current_question.correct_answer_key]).first }
+        let (:prize) { game_w_questions.prize }
+
+        before do
+          put :answer, id: game_w_questions.id, letter: incorrect_answer_key
+        end
+        it 'finishes the game' do
+          expect(game.finished?).to be(true)
+        end
+
+        it 'returns alert' do
+          expect(flash[:alert]).to be
+        end
+
+        it 'increases balance by fireproof value' do
+          expect(user.balance).to eq prize
+        end
       end
     end
   end
