@@ -23,10 +23,16 @@ RSpec.describe GamesController, type: :controller do
       before do
         get :show, id: game_w_questions.id
       end
-      it 'kicks out from #show' do
-        expect(response.status).not_to eq(200) # статус не 200 ОК
-        expect(response).to redirect_to(new_user_session_path) # devise должен отправить на логин
-        expect(flash[:alert]).to be # во flash должен быть прописана ошибка
+      it 'returns no positive response' do
+        expect(response.status).not_to eq(200)
+      end
+
+      it 'redirects to login' do
+        expect(response).to redirect_to(new_user_session_path)
+      end
+
+      it 'returns alert flash' do
+        expect(flash[:alert]).to be
       end
     end
     context 'when Logged In user' do
@@ -65,10 +71,16 @@ RSpec.describe GamesController, type: :controller do
         generate_questions(15)
         post :create
       end
-      it 'kicks out from #create' do
-        expect(response.status).not_to eq(200) # статус не 200 ОК
-        expect(response).to redirect_to(new_user_session_path) # devise должен отправить на логин
-        expect(flash[:alert]).to be # во flash должен быть прописана ошибка
+      it 'returns no positive response' do
+        expect(response.status).not_to eq(200)
+      end
+
+      it 'redirects to login' do
+        expect(response).to redirect_to(new_user_session_path)
+      end
+
+      it 'returns alert flash' do
+        expect(flash[:alert]).to be
       end
     end
 
@@ -124,10 +136,16 @@ RSpec.describe GamesController, type: :controller do
       before do
         put :help, id: game_w_questions.id, help_type: :audience_help
       end
-      it 'kicks out from #help' do
-        expect(response.status).not_to eq(200) # статус не 200 ОК
-        expect(response).to redirect_to(new_user_session_path) # devise должен отправить на логин
-        expect(flash[:alert]).to be # во flash должен быть прописана ошибка
+      it 'returns no positive response' do
+        expect(response.status).not_to eq(200)
+      end
+
+      it 'redirects to login' do
+        expect(response).to redirect_to(new_user_session_path)
+      end
+
+      it 'returns alert flash' do
+        expect(flash[:alert]).to be
       end
     end
     context 'when Logged In' do
@@ -153,6 +171,41 @@ RSpec.describe GamesController, type: :controller do
           expect(game.current_game_question.help_hash[:audience_help]).to be
           expect(game.current_game_question.help_hash[:audience_help].keys).to contain_exactly('a', 'b', 'c', 'd')
           expect(response).to redirect_to(game_path(game))
+        end
+      end
+    end
+  end
+  describe '#take_money' do
+    context 'when Guest' do
+      before { put :take_money, id: game_w_questions.id }
+
+      it 'returns no positive response' do
+        expect(response.status).not_to eq(200)
+      end
+
+      it 'redirects to login' do
+        expect(response).to redirect_to(new_user_session_path)
+      end
+
+      it 'returns alert flash' do
+        expect(flash[:alert]).to be
+      end
+    end
+    context 'when Logged In' do
+      before do
+        sign_in user
+        game_w_questions.update_attribute(:current_level, 2)
+      end
+      context 'tries to take money' do
+        it 'finishes the game with prize' do
+          expect(game.finished?).to be true
+
+          expect(game.prize).to eq(200)
+          user.reload
+          expect(user.balance).to eq(200)
+
+          expect(response).to redirect_to(user_path(user))
+          expect(flash[:warning]).to be
         end
       end
     end
