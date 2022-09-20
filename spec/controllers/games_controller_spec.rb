@@ -3,6 +3,7 @@
 require 'rails_helper'
 require 'support/my_spec_helper' # наш собственный класс с вспомогательными методами
 
+
 # Тестовый сценарий для игрового контроллера
 # Самые важные здесь тесты:
 #   1. на авторизацию (чтобы к чужим юзерам не утекли не их данные)
@@ -16,6 +17,8 @@ RSpec.describe GamesController, type: :controller do
   let(:admin) { FactoryGirl.create(:user, is_admin: true) }
   # игра с прописанными игровыми вопросами
   let(:game_w_questions) { FactoryGirl.create(:game_with_questions, user: user) }
+
+  let (:game) { assigns(:game) }
 
   # группа тестов для незалогиненного юзера (Анонимус)
   describe '#show' do
@@ -44,7 +47,6 @@ RSpec.describe GamesController, type: :controller do
         it 'gives game to #show' do
           get :show, id: game_w_questions.id
 
-          game = assigns(:game) # вытаскиваем из контроллера поле @game
           expect(game.finished?).to be false
           expect(game.user).to eq(user)
 
@@ -69,7 +71,7 @@ RSpec.describe GamesController, type: :controller do
     context 'when Guest' do
       before do
         generate_questions(15)
-        post :create
+        post :create, id: game_w_questions.id
       end
       it 'returns no positive response' do
         expect(response.status).not_to eq(200)
@@ -87,17 +89,36 @@ RSpec.describe GamesController, type: :controller do
     context 'when Logged In' do
       before do
         sign_in user
-        generate_questions(15)
-        post :create
       end
-      it 'creates game' do
-        game = assigns(:game)
+      context 'creates new game' do
+        it 'creates game' do
+          generate_questions(15)
+          post :create
 
-        expect(game.finished?).to be false
-        expect(game.user).to eq(user)
+          expect(game.finished?).to be false
+          expect(game.user).to eq(user)
 
-        expect(response).to redirect_to(game_path(game))
-        expect(flash[:notice]).to be
+          expect(response).to redirect_to(game_path(game))
+          expect(flash[:notice]).to be
+        end
+      end
+      context 'creates new game not finishing last one' do
+        it 'detects a game in progress' do
+          expect(game_w_questions.finished?).to be false
+        end
+        setup do
+          # задаем url старой игры
+          @request.env['HTTP_REFERER'] = 'http://test.host/games/1'
+          post :create
+        end
+        it 'refuses to create new game' do
+          expect { post :create }.to change(Game, :count).by(0)
+          expect(game).to be nil
+        end
+        it 'redirects to present game' do
+          expect(response).to redirect_to(game_path(game_w_questions))
+          expect(flash[:alert]).to be
+        end
       end
     end
   end
@@ -107,10 +128,16 @@ RSpec.describe GamesController, type: :controller do
       before do
         put :answer, id: game_w_questions.id, letter: game_w_questions.current_game_question.correct_answer_key
       end
-      it 'kicks out from #answer' do
-        expect(response.status).not_to eq(200) # статус не 200 ОК
-        expect(response).to redirect_to(new_user_session_path) # devise должен отправить на логин
-        expect(flash[:alert]).to be # во flash должен быть прописана ошибка
+      it 'returns no positive response' do
+        expect(response.status).not_to eq(200)
+      end
+
+      it 'redirects to login' do
+        expect(response).to redirect_to(new_user_session_path)
+      end
+
+      it 'returns alert flash' do
+        expect(flash[:alert]).to be
       end
     end
 
@@ -195,6 +222,7 @@ RSpec.describe GamesController, type: :controller do
       before do
         sign_in user
         game_w_questions.update_attribute(:current_level, 2)
+        put :take_money, id: game_w_questions.id
       end
       context 'tries to take money' do
         it 'finishes the game with prize' do
