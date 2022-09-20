@@ -29,21 +29,32 @@ RSpec.describe GamesController, type: :controller do
         expect(flash[:alert]).to be # во flash должен быть прописана ошибка
       end
     end
-    context 'when Logged In' do
-      # перед каждым тестом в группе
+    context 'when Logged In user' do
       before do
         sign_in user # логиним юзера user с помощью спец. Devise метода sign_in
-        get :show, id: game_w_questions.id
       end
+      context 'when tries to access own game' do
+        # юзер видит свою игру
+        it 'gives game to #show' do
+          get :show, id: game_w_questions.id
 
-      # юзер видит свою игру
-      it 'gives game to #show' do
-        game = assigns(:game) # вытаскиваем из контроллера поле @game
-        expect(game.finished?).to be false
-        expect(game.user).to eq(user)
+          game = assigns(:game) # вытаскиваем из контроллера поле @game
+          expect(game.finished?).to be false
+          expect(game.user).to eq(user)
 
-        expect(response.status).to eq(200) # должен быть ответ HTTP 200
-        expect(response).to render_template('show') # и отрендерить шаблон show
+          expect(response.status).to eq(200) # должен быть ответ HTTP 200
+          expect(response).to render_template('show') # и отрендерить шаблон show
+        end
+      end
+      context 'when tries to access someone else game' do
+        let (:alien_game) { FactoryGirl.create(:game_with_questions) }
+        it 'refuses to show game' do
+          get :show, id: alien_game.id
+
+          expect(response.status).not_to eq(200) # должен быть ответ HTTP 200
+          expect(response).to redirect_to(root_path) # и отрендерить шаблон show
+          expect(flash[:alert]).to be
+        end
       end
     end
   end
