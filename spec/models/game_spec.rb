@@ -41,13 +41,13 @@ RSpec.describe Game, type: :model do
     end
 
     describe '#answer_current_question!' do
-      before do
-        game_w_questions.answer_current_question!(answer_key)
-      end
-
       context 'when answer is correct' do
         let!(:level) { rand(0..Game::FIREPROOF_LEVELS.last - 1)}
         let!(:answer_key) { game_w_questions.current_game_question.correct_answer_key }
+
+        before do
+          game_w_questions.answer_current_question!(answer_key)
+        end
 
         context 'when question is last' do
           let!(:last_level) { Game::FIREPROOF_LEVELS.last }
@@ -95,6 +95,25 @@ RSpec.describe Game, type: :model do
             expect(game_w_questions.finished?).to be true
             expect(game_w_questions.status).to eq :timeout
           end
+        end
+      end
+
+      context 'answer is NOT correct' do
+        let!(:level) { rand(0..Game::FIREPROOF_LEVELS.last - 1)}
+        let!(:current_question) { game_w_questions.current_game_question }
+        let!(:answer_key) do
+          (current_question.variants.keys - [current_question.correct_answer_key]).first
+        end
+        before do
+          game_w_questions.answer_current_question!(answer_key)
+        end
+        it 'finishes the game with status :fail' do
+          expect(game_w_questions.finished?).to be true
+          expect(game_w_questions.status).to eq :fail
+        end
+        it 'increases balance by fireproof value' do
+          prize = game_w_questions.prize
+          expect(user.balance).to eq prize
         end
       end
     end

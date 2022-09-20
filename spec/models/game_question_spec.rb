@@ -54,14 +54,6 @@ RSpec.describe GameQuestion, type: :model do
     end
   end
 
-  # help_hash у нас имеет такой формат:
-  # {
-  #   fifty_fifty: ['a', 'b'], # При использовании подсказски остались варианты a и b
-  #   audience_help: {'a' => 42, 'c' => 37 ...}, # Распределение голосов по вариантам a, b, c, d
-  #   friend_call: 'Василий Петрович считает, что правильный ответ A'
-  # }
-  #
-
   describe '#help_hash' do
     it 'returns Hash' do
       expect(game_question.help_hash).to be_a Hash
