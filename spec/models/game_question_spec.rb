@@ -109,8 +109,10 @@ RSpec.describe GameQuestion, type: :model do
           expect(game_question.help_hash).to include(:fifty_fifty)
         end
 
-        it 'uses hint correctly' do
+        it 'leaves correct answer' do
           expect(ff).to include('b')
+        end
+        it 'leaves 2 answers' do
           expect(ff.size).to eq 2
         end
       end
