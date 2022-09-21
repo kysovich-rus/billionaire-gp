@@ -1,4 +1,4 @@
-3# (c) goodprogrammer.ru
+# (c) goodprogrammer.ru
 
 require 'rails_helper'
 require 'support/my_spec_helper' # наш собственный класс с вспомогательными методами
