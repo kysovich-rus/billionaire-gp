@@ -279,6 +279,7 @@ RSpec.describe GamesController, type: :controller do
 
         context 'after use' do
           let!(:answer_key) { game_w_questions.current_game_question.correct_answer_key }
+
           it 'uses friend call' do
             put :help, id: game_w_questions.id, help_type: :friend_call
 
