@@ -14,6 +14,7 @@ RSpec.describe Question, type: :model do
     it 'validates presence of :text' do
       should validate_presence_of :text
     end
+
     it 'validates presence of :level' do
       should validate_presence_of :level
     end
