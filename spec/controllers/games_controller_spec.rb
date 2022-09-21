@@ -26,6 +26,7 @@ RSpec.describe GamesController, type: :controller do
       before do
         get :show, id: game_w_questions.id
       end
+
       it 'returns no positive response' do
         expect(response.status).not_to eq(200)
       end
@@ -38,10 +39,12 @@ RSpec.describe GamesController, type: :controller do
         expect(flash[:alert]).to be
       end
     end
+
     context 'when Logged In user' do
       before do
         sign_in user # логиним юзера user с помощью спец. Devise метода sign_in
       end
+
       context 'when tries to access own game' do
         # юзер видит свою игру
         it 'gives game to #show' do
@@ -54,6 +57,7 @@ RSpec.describe GamesController, type: :controller do
           expect(response).to render_template('show') # и отрендерить шаблон show
         end
       end
+
       context 'when tries to access someone else game' do
         let (:alien_game) { FactoryGirl.create(:game_with_questions) }
         it 'refuses to show game' do
@@ -90,6 +94,7 @@ RSpec.describe GamesController, type: :controller do
       before do
         sign_in user
       end
+
       context 'creates new game' do
         it 'creates game' do
           generate_questions(15)
@@ -102,19 +107,23 @@ RSpec.describe GamesController, type: :controller do
           expect(flash[:notice]).to be
         end
       end
+
       context 'creates new game not finishing last one' do
         it 'detects a game in progress' do
           expect(game_w_questions.finished?).to be false
         end
+
         setup do
           # задаем url старой игры
           @request.env['HTTP_REFERER'] = 'http://test.host/games/1'
           post :create
         end
+
         it 'refuses to create new game' do
           expect { post :create }.to change(Game, :count).by(0)
           expect(game).to be nil
         end
+
         it 'redirects to present game' do
           expect(response).to redirect_to(game_path(game_w_questions))
           expect(flash[:alert]).to be
@@ -128,6 +137,7 @@ RSpec.describe GamesController, type: :controller do
       before do
         put :answer, id: game_w_questions.id, letter: game_w_questions.current_game_question.correct_answer_key
       end
+
       it 'returns no positive response' do
         expect(response.status).not_to eq(200)
       end
@@ -145,12 +155,11 @@ RSpec.describe GamesController, type: :controller do
       before do
         sign_in user
       end
-      context 'answers correct' do
-        before do
-          put :answer, id: game_w_questions.id, letter: game_w_questions.current_game_question.correct_answer_key
-        end
 
+      context 'answers correct' do
         it 'continues the game' do
+          put :answer, id: game_w_questions.id, letter: game_w_questions.current_game_question.correct_answer_key
+
           expect(game.finished?).to be false
           expect(game.current_level).to be > 0
 
@@ -167,6 +176,11 @@ RSpec.describe GamesController, type: :controller do
         before do
           put :answer, id: game_w_questions.id, letter: incorrect_answer_key
         end
+
+        it 'sends back to main menu' do
+          expect(response).to redirect_to user_path(user)
+        end
+
         it 'finishes the game' do
           expect(game.finished?).to be(true)
         end
@@ -187,6 +201,7 @@ RSpec.describe GamesController, type: :controller do
       before do
         put :help, id: game_w_questions.id, help_type: :audience_help
       end
+
       it 'returns no positive response' do
         expect(response.status).not_to eq(200)
       end
@@ -199,26 +214,27 @@ RSpec.describe GamesController, type: :controller do
         expect(flash[:alert]).to be
       end
     end
+
     context 'when Logged In' do
       before do
         sign_in user
       end
+
       context 'before use' do
         it 'does not have this hint' do
           expect(game_w_questions.current_game_question.help_hash[:audience_help]).not_to be
           expect(game_w_questions.audience_help_used).to be false
+          expect(response.status).to be 200
         end
       end
+
       context 'after use' do
-        before do
-          put :help, id: game_w_questions.id, help_type: :audience_help
-        end
         it 'uses audience help' do
-          game = assigns(:game)
+          put :help, id: game_w_questions.id, help_type: :audience_help
 
           # проверяем, что игра не закончилась, что флажок установился, и подсказка записалась
-          expect(game.finished?).to be_falsey
-          expect(game.audience_help_used).to be_truthy
+          expect(game.finished?).to be false
+          expect(game.audience_help_used).to be true
           expect(game.current_game_question.help_hash[:audience_help]).to be
           expect(game.current_game_question.help_hash[:audience_help].keys).to contain_exactly('a', 'b', 'c', 'd')
           expect(response).to redirect_to(game_path(game))
@@ -226,6 +242,7 @@ RSpec.describe GamesController, type: :controller do
       end
     end
   end
+
   describe '#take_money' do
     context 'when Guest' do
       before { put :take_money, id: game_w_questions.id }
@@ -242,20 +259,24 @@ RSpec.describe GamesController, type: :controller do
         expect(flash[:alert]).to be
       end
     end
+
     context 'when Logged In' do
       before do
         sign_in user
         game_w_questions.update_attribute(:current_level, 2)
-        put :take_money, id: game_w_questions.id
       end
+
       context 'tries to take money' do
         it 'finishes the game with prize' do
+          put :take_money, id: game_w_questions.id
+
           expect(game.finished?).to be true
 
           expect(game.prize).to eq(200)
           user.reload
           expect(user.balance).to eq(200)
 
+          expect(game.status).to eq :money
           expect(response).to redirect_to(user_path(user))
           expect(flash[:warning]).to be
         end
