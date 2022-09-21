@@ -7,10 +7,12 @@ require 'support/my_spec_helper' # наш собственный класс с �
 # В идеале - все методы должны быть покрыты тестами,
 # в этом классе содержится ключевая логика игры и значит работы сайта.
 RSpec.describe Game, type: :model do
+  subject { game_w_questions.answer_current_question!(answer_key) }
   # пользователь для создания игр
   let(:user) { FactoryGirl.create(:user) }
   # игра с прописанными игровыми вопросами
   let(:game_w_questions) { FactoryGirl.create(:game_with_questions, user: user) }
+  let(:current_question) { game_w_questions.current_game_question }
 
   # Группа тестов на работу фабрики создания новых игр
     describe '#create_game!' do
@@ -39,7 +41,7 @@ RSpec.describe Game, type: :model do
 
     describe '#answer_current_question!' do
       context 'when answer is correct' do
-        let!(:answer_key) { game_w_questions.current_game_question.correct_answer_key }
+        let!(:answer_key) { current_question.correct_answer_key }
 
         context 'when question is last' do
           let!(:last_level) { Game::FIREPROOF_LEVELS.last }
@@ -51,12 +53,12 @@ RSpec.describe Game, type: :model do
           end
 
           it 'assigns final prize' do
-            game_w_questions.answer_current_question!(answer_key)
+            subject
             expect(game_w_questions.prize).to eq(max_prize)
           end
 
           it 'finishes game with status :won' do
-            game_w_questions.answer_current_question!(answer_key)
+            subject
             expect(game_w_questions.finished?).to be true
             expect(game_w_questions.status).to eq :won
           end
@@ -64,17 +66,18 @@ RSpec.describe Game, type: :model do
 
         context 'when question is NOT last' do
           let(:level) { rand(0..Game::FIREPROOF_LEVELS.last - 1) }
+
           before do
             game_w_questions.current_level = level
           end
 
           it 'moves to the next level' do
-            game_w_questions.answer_current_question!(answer_key)
+            subject
             expect(game_w_questions.current_level).to eq(level + 1)
           end
 
           it 'continues game' do
-            game_w_questions.answer_current_question!(answer_key)
+            subject
             expect(game_w_questions.finished?).to be false
             expect(game_w_questions.status).to eq :in_progress
           end
@@ -82,19 +85,18 @@ RSpec.describe Game, type: :model do
       end
 
       context 'answer is NOT correct' do
-        let!(:current_question) { game_w_questions.current_game_question }
         let!(:answer_key) do
           (current_question.variants.keys - [current_question.correct_answer_key]).first
         end
 
         it 'finishes the game with status :fail' do
-          game_w_questions.answer_current_question!(answer_key)
+          subject
           expect(game_w_questions.finished?).to be true
           expect(game_w_questions.status).to eq :fail
         end
 
         it 'increases balance by fireproof value' do
-          game_w_questions.answer_current_question!(answer_key)
+          subject
           prize = game_w_questions.prize
           expect(user.balance).to eq prize
         end
@@ -107,7 +109,7 @@ RSpec.describe Game, type: :model do
         end
 
         it 'finishes game with status :timeout' do
-          game_w_questions.answer_current_question!(answer_key)
+          subject
           expect(game_w_questions.finished?).to be true
           expect(game_w_questions.status).to eq :timeout
         end
@@ -116,8 +118,7 @@ RSpec.describe Game, type: :model do
 
     describe '#take_money!' do
       before do
-        q = game_w_questions.current_game_question
-        game_w_questions.answer_current_question!(q.correct_answer_key)
+        game_w_questions.answer_current_question!(current_question.correct_answer_key)
       end
 
       it 'prize has positive value' do
