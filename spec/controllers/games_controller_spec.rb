@@ -171,7 +171,6 @@ RSpec.describe GamesController, type: :controller do
       context 'answers incorrect' do
         let (:current_question) { game_w_questions.current_game_question }
         let (:incorrect_answer_key) { (current_question.variants.keys - [current_question.correct_answer_key]).first }
-        let (:prize) { game_w_questions.prize }
 
         before do
           put :answer, id: game_w_questions.id, letter: incorrect_answer_key
@@ -189,8 +188,8 @@ RSpec.describe GamesController, type: :controller do
           expect(flash[:alert]).to be
         end
 
-        it 'increases balance by fireproof value' do
-          expect(user.balance).to eq prize
+        it 'sets game status as failed' do
+          expect(game.status).to eq :fail
         end
       end
     end
