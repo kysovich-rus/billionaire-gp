@@ -29,7 +29,7 @@ RSpec.feature 'User views alien user page', type: :feature do
 
   feature 'app successfully' do
     before do
-      visit '/users/1'
+      visit "/users/#{profile_owner.id}"
     end
 
     it 'displays profile owner name' do
