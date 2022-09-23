@@ -231,7 +231,6 @@ RSpec.describe GamesController, type: :controller do
         context 'after use' do
           it 'uses audience help' do
             put :help, id: game_w_questions.id, help_type: :audience_help
-
             # проверяем, что игра не закончилась, что флажок установился, и подсказка записалась
             expect(game.finished?).to be false
             expect(game.audience_help_used).to be true
@@ -255,7 +254,6 @@ RSpec.describe GamesController, type: :controller do
           let!(:correct_answer) { game_w_questions.current_game_question.correct_answer_key }
           it 'uses fifty-fifty' do
             put :help, id: game_w_questions.id, help_type: :fifty_fifty
-
             # проверяем, что игра не закончилась, что флажок установился, и подсказка записалась
             expect(game.finished?).to be false
             expect(game.fifty_fifty_used).to be true
@@ -281,7 +279,6 @@ RSpec.describe GamesController, type: :controller do
 
           it 'uses friend call' do
             put :help, id: game_w_questions.id, help_type: :friend_call
-
             # проверяем, что игра не закончилась, что флажок установился, и подсказка записалась
             expect(game.finished?).to be false
             expect(game.friend_call_used).to be true
@@ -321,13 +318,10 @@ RSpec.describe GamesController, type: :controller do
       context 'tries to take money' do
         it 'finishes the game with prize' do
           put :take_money, id: game_w_questions.id
-
           expect(game.finished?).to be true
-
           expect(game.prize).to eq(200)
           user.reload
           expect(user.balance).to eq(200)
-
           expect(game.status).to eq :money
           expect(response).to redirect_to(user_path(user))
           expect(flash[:warning]).to be

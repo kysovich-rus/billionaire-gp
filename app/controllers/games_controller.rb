@@ -83,7 +83,6 @@ class GamesController < ApplicationController
           else
             {alert: I18n.t('controllers.games.help_not_used')}
           end
-
     redirect_to game_path(@game), msg
   end
 

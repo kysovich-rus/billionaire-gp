@@ -13,9 +13,9 @@ FactoryGirl.define do
     current_level 0
     is_failed false
     prize 0
+
     # ! эта фабрика создает объект Game без дочерних игровых вопросов,
     # в такую игру играть нельзя, расширим фабрику дочерней фабрикой!
-
     # фабрика наследует все поля от фабрики :game
     factory :game_with_questions do
       # коллбэк после :build игры - создаем 15 вопросов

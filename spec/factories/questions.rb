@@ -6,7 +6,6 @@
 FactoryGirl.define do
   factory :question do
     sequence(:text) { |n| "В каком году была Космическая Одиссея #{n}?" }
-
     sequence(:level) { |n| n % 15 }
 
     # Ответы сделаем рандомными для красоты
@@ -16,6 +15,3 @@ FactoryGirl.define do
     answer4 { "#{rand(2001)}" }
   end
 end
-
-# PS: неплохой фильмец
-# https://ru.wikipedia.org/wiki/Космическая_одиссея_2001_года

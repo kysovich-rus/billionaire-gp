@@ -20,7 +20,6 @@ RSpec.describe Game, type: :model do
         # генерим 60 вопросов с 4х запасом по полю level,
         # чтобы проверить работу RANDOM при создании игры
         generate_questions(60)
-
         game = nil
         # создaли игру, обернули в блок, на который накладываем проверки
         expect {
@@ -140,20 +139,13 @@ RSpec.describe Game, type: :model do
       it 'balance is correctly increased' do
         game_w_questions.take_money!
         prize = game_w_questions.prize
-
         expect(user.balance).to eq prize
       end
     end
 
     describe '#current_game_question' do
-      let(:level) { rand(0..Question::QUESTION_LEVELS.last) }
-
-      before do
-        game_w_questions.current_level = level
-      end
-
       it 'returns current question' do
-        expect(game_w_questions.current_game_question).to eq(game_w_questions.game_questions[level])
+        expect(game_w_questions.current_game_question).to eq game_w_questions.game_questions.first
       end
     end
 

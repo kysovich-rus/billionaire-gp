@@ -22,14 +22,12 @@ RSpec.describe 'games/game_question', type: :view do
   # Проверяем, что шаблон выводит текст вопроса
   it 'renders question text' do
     render_partial
-
     expect(rendered).to match 'Кому на Руси жить хорошо?'
   end
 
   # Проверяем, что шаблон выводит варианты ответов
   it 'renders question text' do
     render_partial
-
     expect(rendered).to match 'Всем'
     expect(rendered).to match 'Никому'
     expect(rendered).to match 'Животным'
@@ -39,9 +37,7 @@ RSpec.describe 'games/game_question', type: :view do
   # Проверяем, что если использована подсказка, то вариантов только два
   it 'renders half variant if fifty-fifty used' do
     allow(game_question).to receive(:help_hash).and_return({fifty_fifty: ['a', 'b']})
-
     render_partial
-
     expect(rendered).to match 'Всем'
     expect(rendered).to match 'Никому'
     expect(rendered).not_to match 'Животным'
