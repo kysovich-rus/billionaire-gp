@@ -64,7 +64,7 @@ RSpec.describe Game, type: :model do
         end
 
         context 'when question is NOT last' do
-          let(:level) { rand(0..Game::FIREPROOF_LEVELS.last - 1) }
+          let(:level) { Game::FIREPROOF_LEVELS.sample - 1 }
 
           before do
             game_w_questions.current_level = level
